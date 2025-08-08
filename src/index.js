@@ -3,6 +3,7 @@
 
 require('dotenv').config();
 const { spawn } = require('child_process');
+const fs = require('fs');
 const readline = require('readline');
 const os = require('os');
 const express = require('express');
@@ -43,10 +44,65 @@ function runCommand(command, args, options = {}) {
   });
 }
 
+function buildCookieHeaderFromNetscape(text) {
+  try {
+    const lines = text.split(/\r?\n/);
+    const now = Math.floor(Date.now() / 1000);
+    const cookies = [];
+    for (const line of lines) {
+      if (!line || line.startsWith('#')) continue;
+      const parts = line.split('\t');
+      if (parts.length < 7) continue;
+      const domain = parts[0];
+      const expires = parseInt(parts[4], 10);
+      const name = parts[5];
+      const value = parts[6];
+      if (Number.isFinite(expires) && expires > 0 && expires < now) continue;
+      if (!/youtube\.|google\./.test(domain)) continue;
+      cookies.push(`${name}=${value}`);
+    }
+    return cookies.length ? cookies.join('; ') : null;
+  } catch {
+    return null;
+  }
+}
+
+// Initialize cookie sources for resolving restricted YouTube URLs
+const ytCookieState = (() => {
+  const result = { cookiesPath: null, cookieHeader: null };
+  try {
+    const b64 = process.env.YTDLP_COOKIES_BASE64;
+    const pathEnv = process.env.YTDLP_COOKIES_PATH;
+    if (b64) {
+      const buf = Buffer.from(b64, 'base64');
+      const tmpPath = '/tmp/yt_cookies.txt';
+      fs.writeFileSync(tmpPath, buf);
+      result.cookiesPath = tmpPath;
+      result.cookieHeader = buildCookieHeaderFromNetscape(buf.toString('utf8'));
+    } else if (pathEnv && fs.existsSync(pathEnv)) {
+      result.cookiesPath = pathEnv;
+      try {
+        const text = fs.readFileSync(pathEnv, 'utf8');
+        result.cookieHeader = buildCookieHeaderFromNetscape(text);
+      } catch {}
+    } else if (process.env.YTDLP_COOKIE_HEADER) {
+      result.cookieHeader = process.env.YTDLP_COOKIE_HEADER;
+    }
+  } catch (e) {
+    console.error('Failed to initialize cookies:', e?.message || e);
+  }
+  return result;
+})();
+
 async function resolveMediaUrl(pageUrl) {
   // Try yt-dlp (covers YouTube, Twitch, Kick for many cases)
   try {
-    const { stdout } = await runCommand('yt-dlp', ['-g', '-f', 'bestaudio', pageUrl]);
+    const ytArgs = ['-g', '-f', 'bestaudio'];
+    if (ytCookieState.cookiesPath) {
+      ytArgs.push('--cookies', ytCookieState.cookiesPath);
+    }
+    ytArgs.push(pageUrl);
+    const { stdout } = await runCommand('yt-dlp', ytArgs);
     const lines = stdout.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
     if (lines.length > 0) {
       return lines[0];
@@ -56,7 +112,12 @@ async function resolveMediaUrl(pageUrl) {
   }
   // Fallback: streamlink (widely supports live platforms)
   try {
-    const { stdout } = await runCommand('streamlink', ['--stream-url', pageUrl, 'best']);
+    const slArgs = [];
+    if (ytCookieState.cookieHeader) {
+      slArgs.push('--http-header', `Cookie=${ytCookieState.cookieHeader}`);
+    }
+    slArgs.push('--stream-url', pageUrl, 'best');
+    const { stdout } = await runCommand('streamlink', slArgs);
     const url = stdout.trim();
     if (url) return url;
   } catch (err) {
