@@ -1,4 +1,5 @@
 const transcriptEl = document.getElementById('transcript');
+const toggleBtn = document.getElementById('toggle-transcript');
 const timeAEl = document.getElementById('time-a');
 const timeBEl = document.getElementById('time-b');
 const barAEl = document.getElementById('bar-a');
@@ -166,8 +167,9 @@ es.onmessage = (ev) => {
       if (last && last.classList.contains('partial')) transcriptEl.removeChild(last);
       transcriptEl.appendChild(p);
     } else {
+      // Final: replace last partial if present, otherwise append
       const last = transcriptEl.lastElementChild;
-      if (last && last.classList.contains('partial')) last.classList.remove('partial');
+      if (last && last.classList.contains('partial')) transcriptEl.removeChild(last);
       transcriptEl.appendChild(p);
     }
     transcriptEl.scrollTop = transcriptEl.scrollHeight;
@@ -175,3 +177,10 @@ es.onmessage = (ev) => {
     updateBars(msg.speakerDurations);
   } catch {}
 };
+
+// Toggle transcript visibility
+toggleBtn.addEventListener('click', () => {
+  const hidden = transcriptEl.style.display === 'none';
+  transcriptEl.style.display = hidden ? 'block' : 'none';
+  toggleBtn.textContent = hidden ? 'Hide transcript' : 'Show transcript';
+});

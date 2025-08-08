@@ -372,7 +372,20 @@ async function main() {
     if (current.closed) return;
     current.closed = true;
     try { current.connection && current.connection.finish(); } catch {}
-    try { current.ff && current.ff.kill('SIGINT'); } catch {}
+    // Try graceful, then escalate
+    if (current.ff) {
+      try { current.ff.kill('SIGINT'); } catch {}
+      setTimeout(() => {
+        if (current.ff && !current.ff.killed) {
+          try { current.ff.kill('SIGTERM'); } catch {}
+        }
+      }, 500);
+      setTimeout(() => {
+        if (current.ff && !current.ff.killed) {
+          try { current.ff.kill('SIGKILL'); } catch {}
+        }
+      }, 1500);
+    }
     current.connection = null;
     current.ff = null;
     broadcast(analyticsSnapshot());
@@ -463,7 +476,8 @@ async function main() {
           const prev = current.speakerDurations.get(segmentSpeaker) || 0;
           current.speakerDurations.set(segmentSpeaker, prev + duration);
 
-          broadcast({ type: 'final', speaker: segmentSpeaker, text, start, end, speakerDurations: Object.fromEntries(current.speakerDurations) });
+          // Send final and instruct UI to replace partial
+          broadcast({ type: 'final', replace: true, speaker: segmentSpeaker, text, start, end, speakerDurations: Object.fromEntries(current.speakerDurations) });
           broadcast(analyticsSnapshot());
 
           console.log(`[${formatTimestamp(start)}] [Speaker ${segmentSpeaker}] ${text}`);
