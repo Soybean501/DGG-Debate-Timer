@@ -52,7 +52,7 @@ async function resolveMediaUrl(pageUrl) {
       return lines[0];
     }
   } catch (err) {
-    // fall through
+    console.error('yt-dlp failed to resolve media URL:', err?.message || err);
   }
   // Fallback: streamlink (widely supports live platforms)
   try {
@@ -60,7 +60,7 @@ async function resolveMediaUrl(pageUrl) {
     const url = stdout.trim();
     if (url) return url;
   } catch (err) {
-    // fall through
+    console.error('streamlink failed to resolve media URL:', err?.message || err);
   }
 
   throw new Error('Failed to resolve a direct media URL. Ensure yt-dlp or streamlink is installed and the URL is a valid livestream.');
