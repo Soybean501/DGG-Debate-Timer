@@ -3,7 +3,7 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'dgg-debate-timer-damp-frog-121'
+app = 'dgg-debate-timer'
 primary_region = 'lhr'
 
 [build]

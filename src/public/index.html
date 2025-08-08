@@ -9,27 +9,42 @@
   <body>
     <header class="hero">
       <h1>Live Debate Transcriber</h1>
+      <p class="subtitle">Choose a source and press Start. Works with YouTube, Twitch, Kick, or your system microphone.</p>
+
+      <div class="mode-tabs" role="tablist" aria-label="Input source">
+        <button class="tab active" data-mode="live" id="tab-live" aria-selected="true">Live stream</button>
+        <button class="tab" data-mode="video" id="tab-video" aria-selected="false">Video URL</button>
+        <button class="tab" data-mode="mic" id="tab-mic" aria-selected="false">Microphone</button>
+      </div>
+
       <div class="controls">
-        <div class="control-card">
-          <div class="title">Livestream / Video URL</div>
-          <input id="url-input" type="text" placeholder="Paste a YouTube/Twitch/Kick URL. Works for prerecorded videos too." />
-          <button class="primary" id="start-btn">Start from URL</button>
+        <div class="control-card" id="panel-url">
+          <div class="title" id="url-title">Live stream URL</div>
+          <input id="source-url" type="text" autocomplete="off" placeholder="Paste a live stream URL (YouTube/Twitch/Kick)" />
+          <button class="primary" id="start-source-btn">Start</button>
+          <div class="hint">Tip: For prerecorded videos, switch to "Video URL".</div>
         </div>
-        <div class="control-card">
+
+        <div class="control-card" id="panel-mic" style="display:none;">
           <div class="title">Microphone</div>
           <select id="mic-select"><option>Loading devices...</option></select>
-          <button id="start-mic-btn">Start mic</button>
+          <button class="primary" id="start-mic-btn">Start</button>
+          <div class="hint">Choose an input device then Start.</div>
         </div>
+
         <div class="control-card subtle">
           <div class="title">Session</div>
-          <button class="danger" id="stop-btn">Stop</button>
+          <div class="row">
+            <button class="danger" id="stop-btn">Stop</button>
+            <button id="toggle-transcript">Show transcript</button>
+          </div>
         </div>
       </div>
 
       <div class="stats">
         <div class="speakers">
-          <div class="row"><input class="name" id="name-a" value="Speaker A"/> <span id="time-a">0s</span> <span id="pct-a">(0%)</span></div>
-          <div class="row"><input class="name" id="name-b" value="Speaker B"/> <span id="time-b">0s</span> <span id="pct-b">(0%)</span></div>
+          <div class="row speaker-card" data-label="A"><span class="dot a"></span><input class="name" id="name-a" value="Speaker A"/> <span class="bubble" id="time-a">0s</span> <span class="muted" id="pct-a">(0%)</span></div>
+          <div class="row speaker-card" data-label="B"><span class="dot b"></span><input class="name" id="name-b" value="Speaker B"/> <span class="bubble" id="time-b">0s</span> <span class="muted" id="pct-b">(0%)</span></div>
         </div>
         <div class="bar" title="Proportional speaking time">
           <div class="a" id="bar-a" style="width: 50%"></div>
@@ -49,7 +64,6 @@
     </section>
 
     <section class="section glass">
-      <button class="primary" id="toggle-transcript">Show transcript</button>
       <div class="transcript" id="transcript" style="display:none;"></div>
     </section>
 

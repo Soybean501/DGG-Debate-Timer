@@ -9,9 +9,17 @@ const nameBInput = document.getElementById('name-b');
 const pctAEl = document.getElementById('pct-a');
 const pctBEl = document.getElementById('pct-b');
 
-const urlInput = document.getElementById('url-input');
+// Mode switching elements
+const tabLive = document.getElementById('tab-live');
+const tabVideo = document.getElementById('tab-video');
+const tabMic = document.getElementById('tab-mic');
+const panelUrl = document.getElementById('panel-url');
+const panelMic = document.getElementById('panel-mic');
+
+// Unified source controls
+const sourceUrlInput = document.getElementById('source-url');
+const sourceStartBtn = document.getElementById('start-source-btn');
 const micSelect = document.getElementById('mic-select');
-const startBtn = document.getElementById('start-btn');
 const stopBtn = document.getElementById('stop-btn');
 
 const statusEl = document.getElementById('status');
@@ -21,6 +29,7 @@ const wordsEl = document.getElementById('words');
 const ingestedEl = document.getElementById('ingested');
 
 let statusState = { uptimeMs: 0 };
+let currentActiveSpeakerLabel = null;
 let uptimeTimer = null;
 
 function labelSeconds(sec) {
@@ -87,16 +96,44 @@ async function fetchJSON(url, opts) {
   return res.json();
 }
 
-startBtn.addEventListener('click', async () => {
+// Mode switching logic
+function setMode(mode) {
+  // Update tabs
+  for (const btn of [tabLive, tabVideo, tabMic]) {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+    btn.setAttribute('aria-selected', String(btn.dataset.mode === mode));
+  }
+  // Update panels and placeholders
+  if (mode === 'mic') {
+    panelMic.style.display = 'block';
+    panelUrl.style.display = 'none';
+  } else {
+    panelMic.style.display = 'none';
+    panelUrl.style.display = 'block';
+    const isLive = mode === 'live';
+    document.getElementById('url-title').textContent = isLive ? 'Live stream URL' : 'Video URL';
+    sourceUrlInput.placeholder = isLive
+      ? 'Paste a live stream URL (YouTube/Twitch/Kick)'
+      : 'Paste a video URL (YouTube)';
+  }
+  panelUrl.dataset.mode = mode;
+}
+
+tabLive.addEventListener('click', () => setMode('live'));
+tabVideo.addEventListener('click', () => setMode('video'));
+tabMic.addEventListener('click', () => setMode('mic'));
+
+// Start from URL or Video
+sourceStartBtn.addEventListener('click', async () => {
   try {
-    startBtn.disabled = true;
-    const url = urlInput.value.trim();
-    if (!url) throw new Error('Please paste a livestream or YouTube video URL');
+    sourceStartBtn.disabled = true;
+    const url = sourceUrlInput.value.trim();
+    if (!url) throw new Error('Please paste a URL');
     await fetchJSON('/start', { method: 'POST', body: JSON.stringify({ url, mic: false }) });
   } catch (e) {
     alert('Failed to start: ' + (e.message || e));
   } finally {
-    startBtn.disabled = false;
+    sourceStartBtn.disabled = false;
   }
 });
 
@@ -174,6 +211,14 @@ es.onmessage = (ev) => {
     }
     transcriptEl.scrollTop = transcriptEl.scrollHeight;
 
+    // Highlight active speaker card
+    if (currentActiveSpeakerLabel !== label) {
+      currentActiveSpeakerLabel = label;
+      for (const el of document.querySelectorAll('.speaker-card')) el.classList.remove('active');
+      const activeEl = document.querySelector(`.speaker-card[data-label="${label}"]`);
+      if (activeEl) activeEl.classList.add('active');
+    }
+
     updateBars(msg.speakerDurations);
   } catch {}
 };
@@ -184,3 +229,6 @@ toggleBtn.addEventListener('click', () => {
   transcriptEl.style.display = hidden ? 'block' : 'none';
   toggleBtn.textContent = hidden ? 'Hide transcript' : 'Show transcript';
 });
+
+// Default mode
+setMode('live');
