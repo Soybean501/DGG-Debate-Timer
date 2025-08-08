@@ -1,9 +1,8 @@
 FROM node:18-slim
 
-# Install ffmpeg + yt-dlp + streamlink
+# Install ffmpeg + yt-dlp + streamlink from apt (Debian Bookworm)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg python3-pip ca-certificates && \
-    pip3 install --no-cache-dir yt-dlp streamlink && \
+    ffmpeg yt-dlp streamlink ca-certificates && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

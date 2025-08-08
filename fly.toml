@@ -1,16 +1,23 @@
-# Fly.io app configuration file for DGG Debate Timer
-# Docs: https://fly.io/docs/reference/configuration/
+# fly.toml app configuration file generated for dgg-debate-timer-damp-frog-121 on 2025-08-08T18:17:14+01:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app = "dgg-debate-timer"
-primary_region = "lhr"
+app = 'dgg-debate-timer-damp-frog-121'
+primary_region = 'lhr'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
 [http_service]
   internal_port = 3000
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
-  processes = ["app"]
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
