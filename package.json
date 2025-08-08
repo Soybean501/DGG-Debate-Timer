@@ -1,0 +1,19 @@
+{
+  "name": "live-debate-transcriber",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CLI to transcribe live debates from Kick/YouTube/Twitch using Deepgram",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@deepgram/sdk": "^3.3.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}

@@ -1,0 +1,22 @@
+# Node
+node_modules/
+.npmrc
+
+# Env / secrets
+.env
+.env.*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+coverage/
+dist/
+.out/
+.next/

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Live Debate Transcriber</title>
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <h1>Live Debate Transcriber</h1>
+      <div class="controls">
+        <div class="control-card">
+          <div class="title">Livestream / Video URL</div>
+          <input id="url-input" type="text" placeholder="Paste a YouTube/Twitch/Kick URL. Works for prerecorded videos too." />
+          <button class="primary" id="start-btn">Start from URL</button>
+        </div>
+        <div class="control-card">
+          <div class="title">Microphone</div>
+          <select id="mic-select"><option>Loading devices...</option></select>
+          <button id="start-mic-btn">Start mic</button>
+        </div>
+        <div class="control-card subtle">
+          <div class="title">Session</div>
+          <button class="danger" id="stop-btn">Stop</button>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="speakers">
+          <div class="row"><input class="name" id="name-a" value="Speaker A"/> <span id="time-a">0s</span> <span id="pct-a">(0%)</span></div>
+          <div class="row"><input class="name" id="name-b" value="Speaker B"/> <span id="time-b">0s</span> <span id="pct-b">(0%)</span></div>
+        </div>
+        <div class="bar" title="Proportional speaking time">
+          <div class="a" id="bar-a" style="width: 50%"></div>
+          <div class="b" id="bar-b" style="width: 50%"></div>
+        </div>
+      </div>
+    </header>
+
+    <section class="section glass">
+      <div class="kv">
+        <div class="k">Status</div><div id="status">-</div>
+        <div class="k">Platform</div><div id="platform">-</div>
+        <div class="k">Uptime</div><div id="uptime">0s</div>
+        <div class="k">Words</div><div id="words">0</div>
+        <div class="k">Audio secs</div><div id="ingested">0s</div>
+      </div>
+    </section>
+
+    <section class="transcript glass" id="transcript"></section>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
