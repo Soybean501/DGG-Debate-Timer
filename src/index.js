@@ -95,6 +95,9 @@ const ytCookieState = (() => {
 })();
 
 async function resolveMediaUrl(pageUrl) {
+  let ytErrorMsg = null;
+  let slErrorMsg = null;
+
   // Try yt-dlp (covers YouTube, Twitch, Kick for many cases)
   try {
     const ytArgs = ['-g', '-f', 'bestaudio'];
@@ -108,7 +111,8 @@ async function resolveMediaUrl(pageUrl) {
       return lines[0];
     }
   } catch (err) {
-    console.error('yt-dlp failed to resolve media URL:', err?.message || err);
+    ytErrorMsg = err?.message || String(err);
+    console.error('yt-dlp failed to resolve media URL:', ytErrorMsg);
   }
   // Fallback: streamlink (widely supports live platforms)
   try {
@@ -121,10 +125,18 @@ async function resolveMediaUrl(pageUrl) {
     const url = stdout.trim();
     if (url) return url;
   } catch (err) {
-    console.error('streamlink failed to resolve media URL:', err?.message || err);
+    slErrorMsg = err?.message || String(err);
+    console.error('streamlink failed to resolve media URL:', slErrorMsg);
   }
 
-  throw new Error('Failed to resolve a direct media URL. Ensure yt-dlp or streamlink is installed and the URL is a valid livestream.');
+  const hint = [];
+  if (ytCookieState.cookiesPath || ytCookieState.cookieHeader) {
+    hint.push('cookies provided');
+  } else {
+    hint.push('no cookies');
+  }
+  const detail = `(yt-dlp: ${ytErrorMsg || 'n/a'}; streamlink: ${slErrorMsg || 'n/a'}; ${hint.join(', ')})`;
+  throw new Error(`Failed to resolve a direct media URL. Ensure yt-dlp or streamlink is installed and the URL is a valid livestream. ${detail}`);
 }
 
 function startFfmpegPcmStream(mediaUrl) {

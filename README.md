@@ -97,6 +97,49 @@ pm2 save
 ```
 Make sure the firewall/reverse-proxy exposes the configured `PORT`.
 
+### Fly.io
+The included `Dockerfile` installs `ffmpeg`, `streamlink`, and the latest static `yt-dlp`, which are required in production. You do NOT need Docker locally; GitHub Actions will build/deploy using Fly’s remote builder.
+
+One-time setup:
+1. Create the Fly app (or reuse existing) and set region (`fly.toml` already has `primary_region`):
+   ```bash
+   fly apps create live-debate-transcriber
+   ```
+2. Generate a Fly API token and add it as a GitHub secret:
+   - `fly auth token` (or from the Fly dashboard)
+   - In GitHub repo settings → Secrets and variables → Actions → New repository secret:
+     - Name: `FLY_API_TOKEN`
+     - Value: paste the token
+3. Set Fly app secrets (minimum Deepgram):
+   ```bash
+   fly secrets set DEEPGRAM_API_KEY=your_deepgram_key_here
+   ```
+   Optional cookies for some YouTube streams:
+   - Base64 Netscape cookie file:
+     ```bash
+     base64 -i cookies.txt | pbcopy
+     fly secrets set YTDLP_COOKIES_BASE64=<paste>
+     ```
+   - Or direct Cookie header:
+     ```bash
+     fly secrets set YTDLP_COOKIE_HEADER='VISITOR_INFO1_LIVE=...; YSC=...; ...'
+     ```
+
+Deploy via GitHub Actions:
+- Push to `main`. The workflow `.github/workflows/fly-deploy.yml` runs `flyctl deploy --remote-only` and ships the image.
+
+Manual deploy (optional, if you have Fly CLI):
+```bash
+fly deploy --remote-only
+```
+
+Troubleshooting on Fly:
+- If you see "Failed to resolve a direct media URL", the server now includes detailed error hints from `yt-dlp` and `streamlink`. Common fixes:
+  - Provide cookies (see above) for region‑locked or age‑restricted YouTube streams
+  - Verify the URL is actually live; for VODs, switch to Video mode
+  - Some platforms rotate URLs; retry after a minute
+  - Ensure your app instance has outbound internet access (Fly does by default)
+
 ## Troubleshooting
 - "Failed to resolve a direct media URL"
   - Install `yt-dlp`; optionally install `streamlink`

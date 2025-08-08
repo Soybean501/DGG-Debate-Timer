@@ -1,13 +1,12 @@
-# fly.toml app configuration file generated for dgg-debate-timer-damp-frog-121 on 2025-08-08T18:17:14+01:00
+# fly.toml app configuration file generated for live-debate-transcriber on 2025-08-08T19:46:40+01:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'dgg-debate-timer'
+app = 'live-debate-transcriber'
 primary_region = 'lhr'
 
 [build]
-  dockerfile = 'Dockerfile'
 
 [http_service]
   internal_port = 3000
